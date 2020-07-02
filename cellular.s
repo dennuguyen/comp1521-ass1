@@ -92,12 +92,12 @@ run_generation:
 # $t1 = col iteration, j
 # $t2 = starting address of cells array, start
 # $t3 = current address of cells array, start + (i * width + j)
-print_generation:
+print_world:
 	li		$t0, 0							# i = 0;
 	la		$t2, cells						# start = cells;
 
 PL1:
-	bgt     $t0, GENERATIONS, print_end 	# if (i > height) goto print_end;
+	bgt     $t0, GENERATIONS, print_world_end 	# if (i > height) goto print_end;
 	li		$t1, 0							# j = 0;
 
 PL2:
@@ -127,5 +127,5 @@ PE1:
 	addi    $t0, $t0, 1                 	# i++;
     b       PL1                     		# goto PL1;
 
-print_end:
+print_world_end:
 	jr	$ra						# return;
