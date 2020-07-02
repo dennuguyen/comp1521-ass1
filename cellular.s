@@ -1,58 +1,47 @@
 ########################################################################
 # COMP1521 20T2 --- assignment 1: a cellular automaton renderer
 #
-# Written by <<YOU>>, July 2020.
+# Written by Dan Nguyen (z5206032), July 2020.
 
-
-# Maximum and minimum values for the 3 parameters.
-
+# World Variables
 MIN_WORLD_SIZE	=    1
 MAX_WORLD_SIZE	=  128
 MIN_GENERATIONS	= -256
 MAX_GENERATIONS	=  256
-MIN_RULE	=    0
-MAX_RULE	=  255
+MIN_RULE		=    0
+MAX_RULE		=  255
 
-# Characters used to print alive/dead cells.
-
+# Cell Variables
+MAX_CELLS_BYTES	= (MAX_GENERATIONS + 1) * MAX_WORLD_SIZE
 ALIVE_CHAR	= '#'
 DEAD_CHAR	= '.'
-
-# Maximum number of bytes needs to store all generations of cells.
-
-MAX_CELLS_BYTES	= (MAX_GENERATIONS + 1) * MAX_WORLD_SIZE
-
-	.data
-
-# `cells' is used to store successive generations.  Each byte will be 1
-# if the cell is alive in that generation, and 0 otherwise.
-
-cells:	.space MAX_CELLS_BYTES
+ALIVE_BIT	= 1
+DEAD_BIT 	= 0
 
 
-# Some strings you'll need to use:
+.data
+	cells:					.space 	MAX_CELLS_BYTES
+	prompt_world_size:		.asciiz "Enter world size: "
+	error_world_size:		.asciiz "Invalid world size\n"
+	prompt_rule:			.asciiz "Enter rule: "
+	error_rule:				.asciiz "Invalid rule\n"
+	prompt_n_generations:	.asciiz "Enter how many generations: "
+	error_n_generations:	.asciiz "Invalid number of generations\n"
 
-prompt_world_size:	.asciiz "Enter world size: "
-error_world_size:	.asciiz "Invalid world size\n"
-prompt_rule:		.asciiz "Enter rule: "
-error_rule:		.asciiz "Invalid rule\n"
-prompt_n_generations:	.asciiz "Enter how many generations: "
-error_n_generations:	.asciiz "Invalid number of generations\n"
-
-	.text
+.text
 
 	#
 	# REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
 	# `main', AND THE PURPOSES THEY ARE ARE USED FOR
+	# 
+	# $t0 = loop iteration variable, i
 	#
 	# YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
 	# ORIGINAL VALUE WHEN `run_generation' FINISHES
 	#
 
 main:
-	#
-	# REPLACE THIS COMMENT WITH YOUR CODE FOR `main'.
-	#
+	
 
 
 	# replace the syscall below with
@@ -64,8 +53,8 @@ main:
 	# stack, and restoring it after calling `print_world' and
 	# `run_generation'.  [ there are style marks for this ]
 
-	li	$v0, 10
-	syscall
+	# li	$v0, 10
+	# syscall
 
 
 
@@ -96,18 +85,47 @@ run_generation:
 	# specified generation.
 	#
 
-	#
-	# REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
-	# `print_generation', AND THE PURPOSES THEY ARE ARE USED FOR
-	#
-	# YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
-	# ORIGINAL VALUE WHEN `print_generation' FINISHES
-	#
 
+# LIST OF USED REGISTERS
+# 
+# $t0 = row iteration, i
+# $t1 = col iteration, j
+# $t2 = starting address of cells array, start
+# $t3 = current address of cells array, start + (i * width + j)
 print_generation:
+	li		$t0, 0							# i = 0;
+	la		$t2, cells						# start = cells;
 
-	#
-	# REPLACE THIS COMMENT WITH YOUR CODE FOR `print_generation'.
-	#
+PL1:
+	bgt     $t0, GENERATIONS, print_end 	# if (i > height) goto print_end;
+	li		$t1, 0							# j = 0;
 
-	jr	$ra
+PL2:
+	bgt     $t1, WORLD, PE1 				# if (j > width) goto PE1;
+
+	mul		$t3, $t0, width					# $t3 = i * width;
+	add 	$t3, $t3, $t1					# $t3 = i * width + j;
+	mul 	$t3, $t3, 4						# $t3 = #t3 * sizeof(byte);
+	add 	$t3, $t3, $t2					# curr = start + (i * width + j) * sizeof(byte);
+
+	li      $a0, ALIVE_CHAR                 # a0 = '#';
+	beq		($t3), ALIVE_BIT, print_char	# if (curr == ALIVE) goto print_char;
+	li      $a0, DEAD_CHAR                 	# a0 = '.';
+
+print_char:
+    li      $v0, 1                      	# printf("%d", curr);
+    syscall
+
+	addi    $t1, $t1, 1                 	# j++;
+    b       PL2			                  	# goto PL2;
+
+PE1:
+	# li      $a0, '\n'                   	# printf("\n");
+    # li      $v0, 11
+    # syscall
+
+	addi    $t0, $t0, 1                 	# i++;
+    b       PL1                     		# goto PL1;
+
+print_end:
+	jr	$ra						# return;
