@@ -68,6 +68,10 @@ main:
     syscall
     move    $s1, $v0
 
+    jal		run_generation				    # run_generation();
+    jal		print_generation				# print_generation();
+    jr      $ra                             # return;
+    
     # replace the syscall below with
     #
     # li    $v0, 0
@@ -144,10 +148,10 @@ PL2:
     mul     $t3, $t4, $s1                   # $t3 = i * width;
     add     $t3, $t3, $t1                   # $t3 = i * width + j;
     mul     $t3, $t3, SIZEOF_BYTE           # $t3 = #t3 * sizeof(byte);
-    
+
     add     $t3, $t3, $t2                   # curr = start + (i * width + j) * sizeof(byte);    
     li      $a0, ALIVE_CHAR                 # a0 = '#';
-    
+
     lw      $t3, ($t3)
     beq     $t3, ALIVE_BIT, print_char      # if (curr == ALIVE) goto print_char;
     li      $a0, DEAD_CHAR                  # a0 = '.';
