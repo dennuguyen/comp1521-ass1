@@ -87,6 +87,8 @@ main:
     lw      $ra, ($sp)
     addi    $sp, $sp, 4
 
+    move    $a0, $s0                        # width = width;
+    # move    $a1, $s1                        # height = height;
     move    $a2, $v0                        # cells = cells;
 
     addi    $sp, $sp, -4
@@ -166,14 +168,14 @@ run_centre:
     lw      $t4, ($t4)
 
     addi    $t1, $t1, 1                     # j + 1;
-    bge     $t1, 0, run_skip_right          # if ((j + 1) >= world_size) goto run_skip_right;
+    # bge     $t1, 0, run_skip_right          # if ((j + 1) >= world_size) goto run_skip_right;
 
     mul     $t5, $t0, $s0                   # $t5 = (i - 1) * width;
     add     $t5, $t5, $t1                   # $t5 = (i - 1) * width + (j + 1);
     mul     $t5, $t5, SIZEOF_BYTE           # $t5 = $t5 * sizeof(byte);
     add     $t5, $t5, $t2                   # right = start + ((i - 1) * width + (j + 1)) * sizeof(byte);
     lw      $t5, ($t5)
- 
+
  run_skip_right:
     sll     $t3, $t3, 2                     # left <<= 2;
     sll     $t4, $t4, 1                     # centre <<= 1;
@@ -184,10 +186,6 @@ run_centre:
     li      $t9, 1                          # $t9 = 1;
     sllv    $t7, $t9, $t6                   # bit = $t9 << state;
     and     $t8, $s2, $t7                   # set = rule & bit;
-
-    move    $a0, $t7
-    li      $v0, 1
-    syscall
 
     addi    $t0, $t0, 1                     # i;
     addi    $t1, $t1, -1                    # j;
@@ -230,8 +228,7 @@ print_generation:
 
     slti    $t0, $s1, 0                     # i = height < 0 ? 1 : 0;
     move    $t2, $t0                        # flag = i; // flag == 1 || 0
-    addi    $t5, $s1, 1                     # height = height + 1; // height < 0
-    mul     $t0, $t0, $t5                   # i *= height; // i == 0 || height
+    mul     $t0, $t0, $s1                   # i *= height; // i == 0 || height
 
 PL1:
     abs     $t4, $t0                        # $t4 = abs(i);
@@ -241,7 +238,7 @@ PL1:
     b       print_skip_cond                 # goto print_skip_cond;
 
 print_cond:
-    bge     $t0, $s1, print_end             # if (i >= height) goto print_end;
+    bgt     $t0, $s1, print_end             # if (i > height) goto print_end;
 
 print_skip_cond:
     move    $a0, $t4                        # printf("i");
