@@ -9,6 +9,10 @@ QNAME="1521 ass1"
 BIN_C="./cellular"
 BIN_S="1521 spim -f cellular.s"
 
+echo "Compiling..."
+make || exit 1
+echo
+
 if [ ! -f "$BIN_C" ]
 then
 	echo "No such executable: $BIN_C"
@@ -32,10 +36,6 @@ then
 	echo "Missing tests directory"
 	exit 1
 fi
-
-echo "Compiling..."
-make || exit 1
-echo
 
 if [ "$#" -eq 0 ]
 then
