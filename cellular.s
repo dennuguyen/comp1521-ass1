@@ -45,10 +45,9 @@ main:
     syscall
     move    $s0, $v0
 
-    li      $v0, 4
     la      $a0, error_world_size
-    blt     $s0, MIN_WORLD_SIZE, main_end   # if (width < MIN_WORLD_SIZE) goto main_end;
-    blt     $s0, MAX_WORLD_SIZE, main_end   # if (width > MAX_WORLD_SIZE) goto main_end;
+    blt     $s0, MIN_WORLD_SIZE, error_end  # if (width < MIN_WORLD_SIZE) goto error_end;
+    bgt     $s0, MAX_WORLD_SIZE, error_end  # if (width > MAX_WORLD_SIZE) goto error_end;
 
     li      $v0, 4                          # printf("Enter rule: ");
     la      $a0, prompt_rule
@@ -58,10 +57,9 @@ main:
     syscall
     move    $s2, $v0
 
-    li      $v0, 4
     la      $a0, error_rule
-    blt     $s2, MIN_RULE, main_end         # if (rule < MIN_RULE) goto main_end;
-    blt     $s2, MAX_RULE, main_end         # if (rule > MAX_RULE) goto main_end;
+    blt     $s2, MIN_RULE, error_end        # if (rule < MIN_RULE) goto error_end;
+    bgt     $s2, MAX_RULE, error_end        # if (rule > MAX_RULE) goto error_end;
 
     li      $v0, 4                          # printf("Enter how many generations: ");
     la      $a0, prompt_n_generations
@@ -71,10 +69,9 @@ main:
     syscall
     move    $s1, $v0
 
-    li      $v0, 4
     la      $a0, error_n_generations
-    blt     $s2, MIN_GENERATIONS, main_end  # if (height < MIN_GENERATIONS) goto main_end;
-    blt     $s2, MAX_GENERATIONS, main_end  # if (height > MAX_GENERATIONS) goto main_end;
+    blt     $s2, MIN_GENERATIONS, error_end # if (height < MIN_GENERATIONS) goto error_end;
+    bgt     $s2, MAX_GENERATIONS, error_end # if (height > MAX_GENERATIONS) goto error_end;
 
     li      $a0, '\n'                       # printf("\n");
     li      $v0, 11
@@ -98,8 +95,11 @@ main:
     lw      $ra, ($sp)
     addi    $sp, $sp, 4
 
-main_end:
-    syscall                                 # printf("$s", error); || printf("");
+    jr      $ra                             # return;
+
+error_end:
+    li      $v0, 4                          # printf("$s", error);
+    syscall
 
     jr      $ra                             # return;
 
@@ -135,7 +135,7 @@ run_generation:
     sw      $t0, ($t4)                      # centre = 1;
 
 RL1:
-    bgt     $t1, $s1, run_end               # if (i > height) goto run_end;
+    bgt     $t0, $s1, run_end               # if (i > height) goto run_end;
 
     li      $t1, 0                          # j = 0;
 
@@ -149,6 +149,7 @@ RL2:
     addi    $t0, $t0, -1                    # i - 1;
     addi    $t1, $t1, -1                    # j - 1;
     blt     $t1, 0, run_centre              # if ((j - 1) < 0) goto run_centre;
+    beq     $t1, 0xffffff, run_centre       # if ((j - 1) == 0xffffff) goto run_centre;
 
     mul     $t3, $t0, $s0                   # $t3 = (i - 1) * width;
     add     $t3, $t3, $t1                   # $t3 = (i - 1) * width + (j - 1);
@@ -181,8 +182,12 @@ run_centre:
     or      $t6, $t3, $t4                   # state = left | centre;
     or      $t6, $t6, $t5                   # state |= right;
     li      $t9, 1                          # $t9 = 1;
-    sll     $t7, $t9, $t6                   # bit = $t9 << state;
+    sllv    $t7, $t9, $t6                   # bit = $t9 << state;
     and     $t8, $s2, $t7                   # set = rule & bit;
+
+    move    $a0, $t7
+    li      $v0, 1
+    syscall
 
     addi    $t0, $t0, 1                     # i;
     addi    $t1, $t1, -1                    # j;
@@ -190,7 +195,10 @@ run_centre:
     add     $t4, $t4, $t1                   # $t4 = i * width + j;
     mul     $t4, $t4, SIZEOF_BYTE           # $t4 = $t4 * sizeof(byte);
     add     $t4, $t4, $t2                   # centre = start + (i * width + j) * sizeof(byte);
-    sw      $t8, ($t4)                        # centre = 1;
+
+    slti    $t8, $t8, 1                     # set = set < 1 ? 1 : 0;
+    xori    $t8, $t8, 1                     # set ^= 1;
+    sw      $t8, ($t4)                      # centre = set;
 
     addi    $t1, $t1, 1                     # j++;
     b       RL2                             # goto RL2;

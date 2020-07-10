@@ -205,7 +205,7 @@ static void run_generation(int world_size, int which_generation, int rule)
         // by testing the corresponding bit of the rule number.
         int bit = 1 << state;
         int set = rule & bit;
-
+        printf("%d ", set);
         if (set)
         {
             cells[which_generation][x] = 1;
