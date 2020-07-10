@@ -82,17 +82,17 @@
 
 // maximum and minimum values for the 3 parameters
 
-#define MIN_WORLD_SIZE     1
-#define MAX_WORLD_SIZE   128
+#define MIN_WORLD_SIZE 1
+#define MAX_WORLD_SIZE 128
 #define MIN_GENERATIONS -256
-#define MAX_GENERATIONS  256
-#define MIN_RULE           1
-#define MAX_RULE         255
+#define MAX_GENERATIONS 256
+#define MIN_RULE 0
+#define MAX_RULE 255
 
 // characters used to print alive/dead cells
 
-#define ALIVE_CHAR        '#'
-#define DEAD_CHAR         '.'
+#define ALIVE_CHAR '#'
+#define DEAD_CHAR '.'
 
 // `cells' is used to store successive generations.  Each byte will be 1
 // if the cell is alive in that generation, and 0 otherwise.
@@ -102,14 +102,16 @@ static int8_t cells[MAX_GENERATIONS + 1][MAX_WORLD_SIZE];
 static void run_generation(int world_size, int which_generation, int rule);
 static void print_generation(int world_size, int which_generation);
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
     // read 3 integer parameters from stdin
 
     printf("Enter world size: ");
     int world_size = 0;
     scanf("%d", &world_size);
-    if (world_size < MIN_WORLD_SIZE || world_size > MAX_WORLD_SIZE) {
+    if (world_size < MIN_WORLD_SIZE || world_size > MAX_WORLD_SIZE)
+    {
         printf("Invalid world size\n");
         return 1;
     }
@@ -117,7 +119,8 @@ int main(int argc, char *argv[]) {
     printf("Enter rule: ");
     int rule = 0;
     scanf("%d", &rule);
-    if (rule < MIN_RULE || rule > MAX_RULE) {
+    if (rule < MIN_RULE || rule > MAX_RULE)
+    {
         printf("Invalid rule\n");
         return 1;
     }
@@ -125,7 +128,8 @@ int main(int argc, char *argv[]) {
     printf("Enter how many generations: ");
     int n_generations = 0;
     scanf("%d", &n_generations);
-    if (n_generations < MIN_GENERATIONS || n_generations > MAX_GENERATIONS) {
+    if (n_generations < MIN_GENERATIONS || n_generations > MAX_GENERATIONS)
+    {
         printf("Invalid number of generations\n");
         return 1;
     }
@@ -134,7 +138,8 @@ int main(int argc, char *argv[]) {
 
     // negative generations means show the generations in reverse
     int reverse = 0;
-    if (n_generations < 0) {
+    if (n_generations < 0)
+    {
         reverse = 1;
         n_generations = -n_generations;
     }
@@ -143,16 +148,22 @@ int main(int argc, char *argv[]) {
     // this cell is in the middle of the world
     cells[0][world_size / 2] = 1;
 
-    for (int g = 1; g <= n_generations; g++) {
+    for (int g = 1; g <= n_generations; g++)
+    {
         run_generation(world_size, g, rule);
     }
 
-    if (reverse) {
-        for (int g = n_generations; g >= 0; g--) {
+    if (reverse)
+    {
+        for (int g = n_generations; g >= 0; g--)
+        {
             print_generation(world_size, g);
         }
-    } else {
-        for (int g = 0; g <= n_generations; g++) {
+    }
+    else
+    {
+        for (int g = 0; g <= n_generations; g++)
+        {
             print_generation(world_size, g);
         }
     }
@@ -163,8 +174,10 @@ int main(int argc, char *argv[]) {
 //
 // Calculate a new generation using rule and store it in cells
 //
-static void run_generation(int world_size, int which_generation, int rule) {
-    for (int x = 0; x < world_size; x++) {
+static void run_generation(int world_size, int which_generation, int rule)
+{
+    for (int x = 0; x < world_size; x++)
+    {
 
         // Get the values in the left and right neighbour cells.
         // This requires some care, otherwise we could read beyond the
@@ -172,16 +185,20 @@ static void run_generation(int world_size, int which_generation, int rule) {
         // the function, we consider those out-of-bounds cells zero.
 
         int left = 0;
-        if (x > 0) {
+        if (x > 0)
+        {
             left = cells[which_generation - 1][x - 1];
         }
 
         int centre = cells[which_generation - 1][x];
 
         int right = 0;
-        if (x < world_size - 1) {
+        if (x < world_size - 1)
+        {
             right = cells[which_generation - 1][x + 1];
         }
+
+        // printf("%d %d %d\n", left, centre, right);
 
         // Convert the left, centre, and right states into one value.
         int state = left << 2 | centre << 1 | right << 0;
@@ -190,10 +207,12 @@ static void run_generation(int world_size, int which_generation, int rule) {
         // by testing the corresponding bit of the rule number.
         int bit = 1 << state;
         int set = rule & bit;
-
-        if (set) {
+        if (set)
+        {
             cells[which_generation][x] = 1;
-        } else {
+        }
+        else
+        {
             cells[which_generation][x] = 0;
         }
     }
@@ -202,14 +221,19 @@ static void run_generation(int world_size, int which_generation, int rule) {
 //
 // Print out the specified generation
 //
-static void print_generation(int world_size, int which_generation) {
+static void print_generation(int world_size, int which_generation)
+{
     printf("%d", which_generation);
     putchar('\t');
 
-    for (int x = 0; x < world_size; x++) {
-        if (cells[which_generation][x]) {
+    for (int x = 0; x < world_size; x++)
+    {
+        if (cells[which_generation][x])
+        {
             putchar(ALIVE_CHAR);
-        } else {
+        }
+        else
+        {
             putchar(DEAD_CHAR);
         }
     }
