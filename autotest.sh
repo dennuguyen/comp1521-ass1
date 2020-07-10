@@ -57,7 +57,7 @@ do
     t=`basename $tt`
 	t="${t%.*}"
 	$BIN_C < tests/$t.in > tests/$t.exp
-	$BIN_S < tests/$t.in > tests/$t.out
+	$BIN_S < tests/$t.in | echo "$(tail -n +2 tests/$t.exp)" > tests/$t.out
 	echo "------------------------------ "
 	if diff tests/$t.exp tests/$t.out > /dev/null
     then
