@@ -39,7 +39,7 @@ echo
 
 if [ "$#" -eq 0 ]
 then
-	inFiles="*.in"
+	inFiles="tests/*.in"
 elif [ "$#" -eq 1 ]
 then
 	inFiles="empty"
@@ -52,18 +52,19 @@ fi
 echo "***  Testing $QNAME  ***"
 echo
 
-for tt in tests/$inFiles
+for tt in $inFiles
 do
     t=`basename $tt`
+	t="${t%.*}"
 	$BIN_C < tests/$t.in > tests/$t.exp
 	$BIN_S < tests/$t.in > tests/$t.out
 	echo "------------------------------ "
 	if diff tests/$t.exp tests/$t.out > /dev/null
     then
-        printf "${GREEN}Test $g passed\n$RESET_COLOR"
+        printf "${GREEN}Test $t passed\n$RESET_COLOR"
     else
-        printf "${RED}Test $g failed\n$RESET_COLOR"
-        printf "${YELLOW}Check differences between tests/$g.exp and tests/$g.out\n$RESET_COLOR"
+        printf "${RED}Test $t failed\n$RESET_COLOR"
+        printf "${YELLOW}Check differences between tests/$t.exp and tests/$t.out\n$RESET_COLOR"
     fi
 	echo "------------------------------ "
 done
