@@ -70,8 +70,8 @@ main:
     move    $s1, $v0
 
     la      $a0, error_n_generations
-    blt     $s2, MIN_GENERATIONS, error_end # if (height < MIN_GENERATIONS) goto error_end;
-    bgt     $s2, MAX_GENERATIONS, error_end # if (height > MAX_GENERATIONS) goto error_end;
+    blt     $s1, MIN_GENERATIONS, error_end # if (height < MIN_GENERATIONS) goto error_end;
+    bgt     $s1, MAX_GENERATIONS, error_end # if (height > MAX_GENERATIONS) goto error_end;
 
     li      $a0, '\n'                       # printf("\n");
     li      $v0, 11
@@ -281,3 +281,4 @@ PE1:
 
 print_end:
     jr      $ra                             # return void;
+
