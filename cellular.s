@@ -168,7 +168,7 @@ run_centre:
     lw      $t4, ($t4)
 
     addi    $t1, $t1, 1                     # j + 1;
-    # bge     $t1, 0, run_skip_right          # if ((j + 1) >= world_size) goto run_skip_right;
+    bge     $t1, $s0, run_skip_right        # if ((j + 1) >= world_size) goto run_skip_right;
 
     mul     $t5, $t0, $s0                   # $t5 = (i - 1) * width;
     add     $t5, $t5, $t1                   # $t5 = (i - 1) * width + (j + 1);
