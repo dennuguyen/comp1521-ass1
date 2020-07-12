@@ -37,6 +37,12 @@ BYTE_SIZE = 4
 # $s1, $a1 = number of generations, height
 # $s2, $a2 = rule, cells
 main:
+    addi    $sp, $sp, -16
+    sw      $ra, 12($sp)
+    sw      $s2, 8($sp)
+    sw      $s1, 4($sp)
+    sw      $s0, 0($sp)
+
     li      $v0, 4                          # printf("Enter world size: ");
     la      $a0, prompt_world_size
     syscall
@@ -80,31 +86,18 @@ main:
     move    $a0, $s0                        # width = width;
     move    $a1, $s1                        # height = height;
     move    $a2, $s2                        # rule = rule;
-
-    addi    $sp, $sp, -16
-    sw      $fp, 0($sp)
-    move    $fp, $sp
-    addi    $sp, $sp, -12
-    sw      $ra, 12($sp)
-    sw      $s2, 8($sp)
-    sw      $s1, 4($sp)
-    sw      $s0, 0($sp)
     jal     run_generation                  # int *cells = run_generation(width, height, rule);
-    lw      $s0, 
-    lw      $s1, 
-    lw      $s2, 
-    lw      $ra, ($sp)
-    addi    $sp, $sp, 4
 
     move    $a0, $s0                        # width = width;
-    # move    $a1, $s1                        # height = height;
+    move    $a1, $s1                        # height = height;
     move    $a2, $v0                        # cells = cells;
-
-    addi    $sp, $sp, -4
-    sw      $ra, ($sp)
     jal     print_generation                # void print_generation(width, height, cells);
-    lw      $ra, ($sp)
-    addi    $sp, $sp, 4
+
+    lw      $s0, 0($sp)
+    lw      $s1, 4($sp)
+    lw      $s2, 8($sp)
+    lw      $ra, 12($sp)
+    addi    $sp, $sp, 16
 
     jr      $ra                             # return;
 
@@ -131,6 +124,12 @@ error_end:
 # $t8 = set, rule & bit
 # $t9 = placeholder for 1
 run_generation:
+    addi    $sp, $sp, -16
+    sw      $ra, 12($sp)
+    sw      $s2, 8($sp)
+    sw      $s1, 4($sp)
+    sw      $s0, 0($sp)
+
     move    $s0, $a0                        # width = width;
     move    $s1, $a1                        # height = height;
     move    $s2, $a2                        # rule = rule;
@@ -215,6 +214,12 @@ RE1:
     b       RL1                             # goto RL1;
 
 run_end:
+    lw      $s0, 0($sp)
+    lw      $s1, 4($sp)
+    lw      $s2, 8($sp)
+    lw      $ra, 12($sp)
+    addi    $sp, $sp, 16
+
     move    $v0, $t2
     jr      $ra                             # return cells;
 
@@ -231,6 +236,12 @@ run_end:
 # $t4 = abs(i)
 # $t5 = height + 1 for height < 0
 print_generation:
+    addi    $sp, $sp, -16
+    sw      $ra, 12($sp)
+    sw      $s2, 8($sp)
+    sw      $s1, 4($sp)
+    sw      $s0, 0($sp)
+
     move    $s0, $a0                        # width = width;
     move    $s1, $a1                        # height = height;
     move    $s2, $a2                        # cells = cells;
@@ -289,4 +300,10 @@ PE1:
     b       PL1                             # goto PL1;
 
 print_end:
+    lw      $s0, 0($sp)
+    lw      $s1, 4($sp)
+    lw      $s2, 8($sp)
+    lw      $ra, 12($sp)
+    addi    $sp, $sp, 16
+
     jr      $ra                             # return void;
