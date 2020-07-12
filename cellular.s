@@ -19,7 +19,7 @@ ALIVE_BIT   = 1
 DEAD_BIT    = 0
 
 # Other definitions
-SIZEOF_BYTE = 4
+BYTE_SIZE = 4
 
 .data
     cells:                  .space  MAX_CELLS_BYTES
@@ -81,9 +81,18 @@ main:
     move    $a1, $s1                        # height = height;
     move    $a2, $s2                        # rule = rule;
 
-    addi    $sp, $sp, -4
-    sw      $ra, ($sp)
+    addi    $sp, $sp, -16
+    sw      $fp, 0($sp)
+    move    $fp, $sp
+    addi    $sp, $sp, -12
+    sw      $ra, 12($sp)
+    sw      $s2, 8($sp)
+    sw      $s1, 4($sp)
+    sw      $s0, 0($sp)
     jal     run_generation                  # int *cells = run_generation(width, height, rule);
+    lw      $s0, 
+    lw      $s1, 
+    lw      $s2, 
     lw      $ra, ($sp)
     addi    $sp, $sp, 4
 
@@ -132,7 +141,7 @@ run_generation:
     la      $t2, cells                      # start = cells;
 
     divu    $t4, $s0, 2                     # $t4 = world_size / 2;
-    mul     $t4, $t4, SIZEOF_BYTE           # $t4 = $t4 * sizeof(byte);
+    mul     $t4, $t4, BYTE_SIZE             # $t4 = $t4 * sizeof(byte);
     add     $t4, $t4, $t2                   # centre = start + (world_size / 2) * sizeof(byte);
     sw      $t0, ($t4)                      # centre = 1;
 
@@ -155,7 +164,7 @@ RL2:
 
     mul     $t3, $t0, $s0                   # $t3 = (i - 1) * width;
     add     $t3, $t3, $t1                   # $t3 = (i - 1) * width + (j - 1);
-    mul     $t3, $t3, SIZEOF_BYTE           # $t3 = $t3 * sizeof(byte);
+    mul     $t3, $t3, BYTE_SIZE             # $t3 = $t3 * sizeof(byte);
     add     $t3, $t3, $t2                   # left = start + ((i - 1) * width + (j - 1)) * sizeof(byte);
     lw      $t3, ($t3)
 
@@ -163,7 +172,7 @@ run_centre:
     addi    $t1, $t1, 1                     # j;
     mul     $t4, $t0, $s0                   # $t4 = (i - 1) * width;
     add     $t4, $t4, $t1                   # $t4 = (i - 1) * width + j;
-    mul     $t4, $t4, SIZEOF_BYTE           # $t4 = $t4 * sizeof(byte);
+    mul     $t4, $t4, BYTE_SIZE             # $t4 = $t4 * sizeof(byte);
     add     $t4, $t4, $t2                   # centre = start + ((i - 1) * width + j) * sizeof(byte);
     lw      $t4, ($t4)
 
@@ -172,7 +181,7 @@ run_centre:
 
     mul     $t5, $t0, $s0                   # $t5 = (i - 1) * width;
     add     $t5, $t5, $t1                   # $t5 = (i - 1) * width + (j + 1);
-    mul     $t5, $t5, SIZEOF_BYTE           # $t5 = $t5 * sizeof(byte);
+    mul     $t5, $t5, BYTE_SIZE             # $t5 = $t5 * sizeof(byte);
     add     $t5, $t5, $t2                   # right = start + ((i - 1) * width + (j + 1)) * sizeof(byte);
     lw      $t5, ($t5)
 
@@ -191,7 +200,7 @@ run_centre:
     addi    $t1, $t1, -1                    # j;
     mul     $t4, $t0, $s0                   # $t4 = i * width;
     add     $t4, $t4, $t1                   # $t4 = i * width + j;
-    mul     $t4, $t4, SIZEOF_BYTE           # $t4 = $t4 * sizeof(byte);
+    mul     $t4, $t4, BYTE_SIZE             # $t4 = $t4 * sizeof(byte);
     add     $t4, $t4, $t2                   # centre = start + (i * width + j) * sizeof(byte);
 
     slti    $t8, $t8, 1                     # set = set < 1 ? 1 : 0;
@@ -256,7 +265,7 @@ PL2:
 
     mul     $t3, $t4, $s0                   # $t3 = i * width;
     add     $t3, $t3, $t1                   # $t3 = i * width + j;
-    mul     $t3, $t3, SIZEOF_BYTE           # $t3 = $t3 * sizeof(byte);
+    mul     $t3, $t3, BYTE_SIZE             # $t3 = $t3 * sizeof(byte);
     add     $t3, $t3, $s2                   # curr = start + (i * width + j) * sizeof(byte);
     lw      $t3, ($t3)
 
@@ -281,4 +290,3 @@ PE1:
 
 print_end:
     jr      $ra                             # return void;
-
