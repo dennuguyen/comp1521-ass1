@@ -2,8 +2,9 @@
 # COMP1521 20T2 --- assignment 1: a cellular automaton renderer
 #
 # Written by Dan Nguyen (z5206032), July 2020.
+# Comments for an audience fairly adept in Assembly.
 
-# World Definitions
+# World definitions
 MIN_WORLD_SIZE  =    1
 MAX_WORLD_SIZE  =  128
 MIN_GENERATIONS = -256
@@ -11,7 +12,7 @@ MAX_GENERATIONS =  256
 MIN_RULE        =    0
 MAX_RULE        =  255
 
-# Cell Definitions
+# Cell definitions
 MAX_CELLS_BYTES = (MAX_GENERATIONS + 1) * MAX_WORLD_SIZE
 ALIVE_CHAR  = '#'
 DEAD_CHAR   = '.'
@@ -33,9 +34,17 @@ BYTE_SIZE = 4
 .text
 # main:
 # 
-# $s0, $a0 = world size, width
-# $s1, $a1 = number of generations, height
-# $s2, $a2 = rule, cells
+# REGISTERS
+#   $s0, $a0 = world size, width
+#   $s1, $a1 = number of generations, height
+#   $s2, $a2 = rule & cells
+# 
+# STRUCTURE
+#   main:
+#   [prologue]
+#   [epilogue] .... Natural end to main
+#   error_end: .... Alternative end to main where error is raised
+#   [epilogue]
 main:
     addi    $sp, $sp, -16
     sw      $ra, 12($sp)
@@ -105,24 +114,42 @@ error_end:
     li      $v0, 4                          # printf("$s", error);
     syscall
 
+    lw      $s0, 0($sp)
+    lw      $s1, 4($sp)
+    lw      $s2, 8($sp)
+    lw      $ra, 12($sp)
+    addi    $sp, $sp, 16
+
     jr      $ra                             # return;
 
-# run_generation
+# run_generation:
+#
+# REGISTERS
+#   $s0 = width
+#   $s1 = height
+#   $s2 = rule
+#   
+#   $t0 = row iteration, i
+#   $t1 = col iteration, j
+#   $t2 = starting address of cells array, start
+#   $t3 = left, start + (i * width + j - 1)
+#   $t4 = centre, start + (i * width + j)
+#   $t5 = right, start + (i * width + j + 1)
+#   $t6 = state, left << 2 | centre << 1 | right << 0
+#   $t7 = bit, 1 << state
+#   $t8 = set, rule & bit
+#   $t9 = placeholder for 1
 # 
-# $s0 = width
-# $s1 = height
-# $s2 = rule
-# 
-# $t0 = row iteration, i
-# $t1 = col iteration, j
-# $t2 = starting address of cells array, start
-# $t3 = left, start + (i * width + j - 1)
-# $t4 = centre, start + (i * width + j)
-# $t5 = right, start + (i * width + j + 1)
-# $t6 = state, left << 2 | centre << 1 | right << 0
-# $t7 = bit, 1 << state
-# $t8 = set, rule & bit
-# $t9 = placeholder for 1
+# STRUCTURE
+#   run_generation:
+#   [prologue]
+#       RL1: ...................... Run Loop 1, loops through each row of cells matrix
+#           RL2: .................. Run Loop 2, loops through each column of cells matrix
+#               run_centre: ....... Conditional block to skip getting "left" variable
+#               run_skip_right: ... Conditional block to skip getting "right" variable
+#       RE1: ...................... Go to RL1
+#   run_end: ...................... Natural end of run_generation
+#   [epilogue]
 run_generation:
     addi    $sp, $sp, -16
     sw      $ra, 12($sp)
@@ -134,6 +161,8 @@ run_generation:
     move    $s1, $a1                        # height = height;
     move    $s2, $a2                        # rule = rule;
 
+    # Only consider the absolute value of n_generations because cellular
+    # automata starts from 0th row
     abs     $s1, $s1                        # height = abs(height);
 
     li      $t0, 1                          # i = 1;
@@ -143,7 +172,7 @@ run_generation:
     mul     $t4, $t4, BYTE_SIZE             # $t4 = $t4 * sizeof(byte);
     add     $t4, $t4, $t2                   # centre = start + (world_size / 2) * sizeof(byte);
     sw      $t0, ($t4)                      # centre = 1;
-
+ 
 RL1:
     bgt     $t0, $s1, run_end               # if (i > height) goto run_end;
 
@@ -159,6 +188,7 @@ RL2:
     addi    $t0, $t0, -1                    # i - 1;
     addi    $t1, $t1, -1                    # j - 1;
     blt     $t1, 0, run_centre              # if ((j - 1) < 0) goto run_centre;
+    # Check 0xffffff which represents -1 due to underflow
     beq     $t1, 0xffffff, run_centre       # if ((j - 1) == 0xffffff) goto run_centre;
 
     mul     $t3, $t0, $s0                   # $t3 = (i - 1) * width;
@@ -225,16 +255,29 @@ run_end:
 
 # print_generation
 # 
-# $s0 = width
-# $s1 = height
-# $s2 = starting address of cells array, start
+# REGISTERS
+#   $s0 = width
+#   $s1 = height
+#   $s2 = starting address of cells array, start
+#   
+#   $t0 = row iteration, i
+#   $t1 = col iteration, j
+#   $t2 = negative flag, 1 if True, 0 if False
+#   $t3 = current address of cells array, start + (i * width + j)
+#   $t4 = abs(i)
+#   $t5 = height + 1 for height < 0
 # 
-# $t0 = row iteration, i
-# $t1 = col iteration, j
-# $t2 = negative flag, 1 if True, 0 if False
-# $t3 = current address of cells array, start + (i * width + j)
-# $t4 = abs(i)
-# $t5 = height + 1 for height < 0
+# STRUCTURE
+#   print_generation:
+#   [prologue]
+#       PL1: ...................... Print Loop 1, loops through each row of cells matrix
+#           print_cond: ........... Conditional block for +ve generation case
+#           print_skip_cond: ...... Conditional block to print row indexing and skip +ve case
+#           PL2: .................. Print Loop 2, loops through each column of cells matrix
+#               print_char: ....... Conditional block to skip DEAD_CHAR assignment
+#       PE1: ...................... Go to PL1
+#   print_end: .................... Natural end of print_generation
+#   [epilogue]
 print_generation:
     addi    $sp, $sp, -16
     sw      $ra, 12($sp)
@@ -246,18 +289,22 @@ print_generation:
     move    $s1, $a1                        # height = height;
     move    $s2, $a2                        # cells = cells;
 
+    # Set i = 0 if +ve generations or i = -abs(height) if -ve generations
     slti    $t0, $s1, 0                     # i = height < 0 ? 1 : 0;
-    move    $t2, $t0                        # flag = i; // flag == 1 || 0
-    mul     $t0, $t0, $s1                   # i *= height; // i == 0 || height
+    move    $t2, $t0                        # flag = i;
+    mul     $t0, $t0, $s1                   # i *= height;
 
 PL1:
     abs     $t4, $t0                        # $t4 = abs(i);
+    # Check if dealing with -ve or +ve generation case
     beq     $t2, $zero, print_cond          # if (flag == False) goto print_cond;
 
+    # Condition for -ve generation case
     bgt     $t0, $zero, print_end           # if (abs(i) > 0) goto print_end;
     b       print_skip_cond                 # goto print_skip_cond;
 
 print_cond:
+    # Condition for +ve generation case
     bgt     $t0, $s1, print_end             # if (i > height) goto print_end;
 
 print_skip_cond:
