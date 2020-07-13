@@ -187,7 +187,7 @@ RL2:
 
     addi    $t0, $t0, -1                    # i - 1;
     addi    $t1, $t1, -1                    # j - 1;
-    blt     $t1, 0, run_centre              # if ((j - 1) < 0) goto run_centre;
+    blt     $t1, $zero, run_centre          # if ((j - 1) < 0) goto run_centre;
     # Check 0xffffff which represents -1 due to underflow
     beq     $t1, 0xffffff, run_centre       # if ((j - 1) == 0xffffff) goto run_centre;
 
