@@ -20,7 +20,7 @@ ALIVE_BIT   = 1
 DEAD_BIT    = 0
 
 # Other definitions
-BYTE_SIZE = 4
+BYTE_SIZE = 1
 
 .data
     cells:                  .space  MAX_CELLS_BYTES
@@ -171,7 +171,7 @@ run_generation:
     divu    $t4, $s0, 2                     # $t4 = world_size / 2;
     mul     $t4, $t4, BYTE_SIZE             # $t4 = $t4 * sizeof(byte);
     add     $t4, $t4, $t2                   # centre = start + (world_size / 2) * sizeof(byte);
-    sw      $t0, ($t4)                      # centre = 1;
+    sb      $t0, ($t4)                      # centre = 1;
  
 RL1:
     bgt     $t0, $s1, run_end               # if (i > height) goto run_end;
@@ -195,7 +195,7 @@ RL2:
     add     $t3, $t3, $t1                   # $t3 = (i - 1) * width + (j - 1);
     mul     $t3, $t3, BYTE_SIZE             # $t3 = $t3 * sizeof(byte);
     add     $t3, $t3, $t2                   # left = start + ((i - 1) * width + (j - 1)) * sizeof(byte);
-    lw      $t3, ($t3)
+    lb      $t3, ($t3)
 
 run_centre:
     addi    $t1, $t1, 1                     # j;
@@ -203,7 +203,7 @@ run_centre:
     add     $t4, $t4, $t1                   # $t4 = (i - 1) * width + j;
     mul     $t4, $t4, BYTE_SIZE             # $t4 = $t4 * sizeof(byte);
     add     $t4, $t4, $t2                   # centre = start + ((i - 1) * width + j) * sizeof(byte);
-    lw      $t4, ($t4)
+    lb      $t4, ($t4)
 
     addi    $t1, $t1, 1                     # j + 1;
     bge     $t1, $s0, run_skip_right        # if ((j + 1) >= world_size) goto run_skip_right;
@@ -212,7 +212,7 @@ run_centre:
     add     $t5, $t5, $t1                   # $t5 = (i - 1) * width + (j + 1);
     mul     $t5, $t5, BYTE_SIZE             # $t5 = $t5 * sizeof(byte);
     add     $t5, $t5, $t2                   # right = start + ((i - 1) * width + (j + 1)) * sizeof(byte);
-    lw      $t5, ($t5)
+    lb      $t5, ($t5)
 
  run_skip_right:
     sll     $t3, $t3, 2                     # left <<= 2;
@@ -234,7 +234,7 @@ run_centre:
 
     slti    $t8, $t8, 1                     # set = set < 1 ? 1 : 0;
     xori    $t8, $t8, 1                     # set ^= 1;
-    sw      $t8, ($t4)                      # centre = set;
+    sb      $t8, ($t4)                      # centre = set;
 
     addi    $t1, $t1, 1                     # j++;
     b       RL2                             # goto RL2;
@@ -325,7 +325,7 @@ PL2:
     add     $t3, $t3, $t1                   # $t3 = i * width + j;
     mul     $t3, $t3, BYTE_SIZE             # $t3 = $t3 * sizeof(byte);
     add     $t3, $t3, $s2                   # curr = start + (i * width + j) * sizeof(byte);
-    lw      $t3, ($t3)
+    lb      $t3, ($t3)
 
     li      $a0, ALIVE_CHAR                 # a0 = '#';
     beq     $t3, ALIVE_BIT, print_char      # if (curr == ALIVE) goto print_char;
@@ -354,3 +354,4 @@ print_end:
     addi    $sp, $sp, 16
 
     jr      $ra                             # return void;
+
